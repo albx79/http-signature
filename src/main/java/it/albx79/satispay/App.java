@@ -3,21 +3,18 @@ package it.albx79.satispay;
 import it.albx79.satispay.signature.SignatureParams;
 import lombok.SneakyThrows;
 import lombok.val;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import org.apache.commons.io.IOUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-@Command(name = "Request", mixinStandardHelpOptions = true, version = "0.1")
+@Command(name = "httpsignature", mixinStandardHelpOptions = true, version = "0.1")
 public class App implements Runnable {
     static final String SATISPAY_STAGING = "https://staging.authservices.satispay.com/wally-services/protocol/tests/signature";
 
-    @Parameters(defaultValue = SATISPAY_STAGING)
+    @Parameters(defaultValue = SATISPAY_STAGING, description = "Defaults to " + SATISPAY_STAGING)
     String url;
 
     @Option(names = {"--method", "-m"}, defaultValue = "GET")
@@ -29,7 +26,7 @@ public class App implements Runnable {
     @Option(names = {"--type", "-t"}, defaultValue = "text/plain")
     String mediaType;
 
-    @Option(names = {"--debug", "-d"})
+    @Option(names = {"--debug", "-d"}, description = "Print the request.")
     boolean debug;
 
     private final SignatureParams params = SignatureParams.builder().build();
@@ -43,7 +40,9 @@ public class App implements Runnable {
         if ("GET".equalsIgnoreCase(method)) {
             requestBuilder.get();
         } else {
-            requestBuilder.method(method, RequestBody.create(body, MediaType.parse(mediaType)));
+            requestBuilder
+                    .method(method, RequestBody.create(body, MediaType.parse(mediaType)))
+                    .header("Content-Type", mediaType);
         }
         val request = ctx.getSigner().sign(requestBuilder);
         if (debug) {
@@ -56,5 +55,4 @@ public class App implements Runnable {
     public static void main(String[] args) {
         new CommandLine(new App()).execute(args);
     }
-
 }
