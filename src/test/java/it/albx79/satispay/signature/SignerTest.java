@@ -13,8 +13,7 @@ import java.util.Arrays;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-class SignerTest
-{
+class SignerTest {
     static final String EXAMPLE_STAGING = "http://example.com";
     static final MediaType JSON = MediaType.get("application/json");
 

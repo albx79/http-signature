@@ -10,6 +10,9 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 @Command(name = "httpsignature", mixinStandardHelpOptions = true, version = "0.1")
 public class App implements Runnable {
     static final String SATISPAY_STAGING = "https://staging.authservices.satispay.com/wally-services/protocol/tests/signature";
@@ -29,14 +32,19 @@ public class App implements Runnable {
     @Option(names = {"--debug", "-d"}, description = "Print the request.")
     boolean debug;
 
-    private final SignatureParams params = SignatureParams.builder().build();
+    @Option(names = {"-H", "--header"}, description = "Additional HTTP headers.")
+    Map<String, String> headers;
+
+    private final SignatureParams.SignatureParamsBuilder params = SignatureParams.builder();
 
     @Override
     @SneakyThrows
     public void run() {
-        val ctx = new Context(params);
+        params.headers(new ArrayList<>(headers.keySet()));
+        val ctx = new Context(params.build());
         val client = new OkHttpClient.Builder().build();
         val requestBuilder = new Request.Builder().url(url);
+        headers.forEach(requestBuilder::header);
         if ("GET".equalsIgnoreCase(method)) {
             requestBuilder.get();
         } else {
