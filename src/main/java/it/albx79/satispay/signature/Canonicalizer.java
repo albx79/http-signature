@@ -1,9 +1,9 @@
 package it.albx79.satispay.signature;
 
 import okhttp3.Request;
-import okhttp3.RequestBody;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * In order to generate the string that is signed with a key, the client must use the values of each HTTP header field in the headers Signature parameter, in the order they appear in the headers Signature parameter. Implementers should at minimum include the request target and Date header fields. To include the HTTP request target in the signature calculation, use the special (request-target) header field name.
@@ -18,7 +18,17 @@ public class Canonicalizer {
     /**
      * uses the algorithm and headers signature parameters to form a canonicalized signing string
      */
-    String canonicalize(Parameters params, Request.Builder requestBuilder) {
-        return "TODO";
+    public String canonicalize(SignatureParams params, final Request request) {
+        return params.getHeaders().stream()
+                .map(header -> header.toLowerCase() + ": " + canonicalizeHeaders(request, header))
+                .collect(Collectors.joining("\n"));
+    }
+
+    @NotNull
+    private String canonicalizeHeaders(Request request, String header) {
+        if ("(request-target)".equalsIgnoreCase(header)) {
+            return request.method().toLowerCase() + " " + request.url().encodedPath();
+        }
+        return String.join(", ", request.headers(header));
     }
 }
