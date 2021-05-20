@@ -3,15 +3,18 @@ package it.albx79.satispay;
 import it.albx79.satispay.signature.SignatureParams;
 import lombok.SneakyThrows;
 import lombok.val;
-import okhttp3.*;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.apache.commons.io.IOUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
 @Command(name = "httpsignature", mixinStandardHelpOptions = true, version = "0.1")
 public class App implements Runnable {
@@ -32,19 +35,20 @@ public class App implements Runnable {
     @Option(names = {"--debug", "-d"}, description = "Print the request.")
     boolean debug;
 
-    @Option(names = {"-H", "--header"}, description = "Additional HTTP headers.")
-    Map<String, String> headers;
+    @Option(names = {"-H", "--header"}, description = "HTTP headers to include in signature.")
+    List<String> headers = Collections.emptyList();
 
     private final SignatureParams.SignatureParamsBuilder params = SignatureParams.builder();
 
     @Override
     @SneakyThrows
     public void run() {
-        params.headers(new ArrayList<>(headers.keySet()));
+        if (!headers.isEmpty()) {
+            params.headers(headers);
+        }
         val ctx = new Context(params.build());
         val client = new OkHttpClient.Builder().build();
         val requestBuilder = new Request.Builder().url(url);
-        headers.forEach(requestBuilder::header);
         if ("GET".equalsIgnoreCase(method)) {
             requestBuilder.get();
         } else {
